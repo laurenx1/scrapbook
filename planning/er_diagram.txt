@@ -1,0 +1,55 @@
+erDiagram
+    USER ||--o{ SCRAPBOOK : creates
+    SCRAPBOOK ||--o{ PAGE : contains
+    SCRAPBOOK }o--o{ SONG : plays
+    PAGE ||--o{ PAGE_ELEMENT : displays
+    
+    USER {
+        uuid id PK
+        string username
+        string email
+        string password_hash
+        datetime created_at
+    }
+
+    SCRAPBOOK {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string theme_category
+        boolean is_private
+        datetime updated_at
+    }
+
+    PAGE {
+        uuid id PK
+        uuid scrapbook_id FK
+        int page_order
+        string background_color
+        string background_image_url
+    }
+
+    PAGE_ELEMENT {
+        uuid id PK
+        uuid page_id FK
+        string type "photo | sticker | text"
+        float x_pos
+        float y_pos
+        float rotation
+        float scale
+        int z_index
+        jsonb properties "font, color, text_content, or asset_url"
+    }
+
+    SONG {
+        uuid id PK
+        string title
+        string artist
+        string file_url
+        int duration_seconds
+    }
+
+    SCRAPBOOK_SONGS {
+        uuid scrapbook_id FK
+        uuid song_id FK
+    }

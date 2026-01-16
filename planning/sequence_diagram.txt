@@ -1,0 +1,48 @@
+sequenceDiagram
+    participant User
+    participant Frontend as Web UI (Cute Interface)
+    participant Auth as Auth Service
+    participant API as Backend API
+    participant DB as Database (SQL/NoSQL)
+    participant Storage as Media Storage (S3/Cloud)
+
+    %% Authentication
+    rect rgb(240, 248, 255)
+    User->>Frontend: Sign up / Log in
+    Frontend->>Auth: Validate Credentials
+    Auth-->>Frontend: Return JWT/Session Token
+    end
+
+    %% Scrapbook Creation
+    rect rgb(255, 240, 245)
+    User->>Frontend: Create New Scrapbook
+    Frontend->>API: POST /scrapbooks (Title, Theme)
+    API->>DB: Save New Scrapbook Entry
+    DB-->>Frontend: Confirm & Load Editor
+    end
+
+    %% Media Upload
+    rect rgb(240, 255, 240)
+    User->>Frontend: Upload Photos / Music
+    Frontend->>Storage: Direct Upload (or via API)
+    Storage-->>Frontend: Return Media URL
+    Frontend->>API: PATCH /scrapbooks/{id} (Store Media URLs)
+    API->>DB: Update Scrapbook Metadata
+    end
+
+    %% Decoration & Layout
+    rect rgb(255, 250, 205)
+    User->>Frontend: Add Stickers, Text, Fonts
+    Note over Frontend: UI updates in real-time
+    User->>Frontend: Save / Edit
+    Frontend->>API: PUT /pages (JSON Layout Data)
+    API->>DB: Persist Layout State
+    end
+
+    %% Retrieval
+    rect rgb(230, 230, 250)
+    User->>Frontend: View Gallery
+    Frontend->>API: GET /user/scrapbooks
+    API->>DB: Query User Records
+    DB-->>Frontend: Return List of Scrapbooks + Previews
+    end
