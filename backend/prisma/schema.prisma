@@ -1,0 +1,100 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid()) @db.Uuid
+  username     String      @unique
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  scrapbooks   Scrapbook[]
+
+  @@map("users")
+}
+
+model Scrapbook {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @map("user_id") @db.Uuid
+  title         String
+  themeCategory String           @map("theme_category")
+  isPrivate     Boolean          @default(false) @map("is_private")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages         Page[]
+  songs         ScrapbookSong[]
+
+  @@index([userId])
+  @@map("scrapbooks")
+}
+
+model Page {
+  id                 String        @id @default(uuid()) @db.Uuid
+  scrapbookId        String        @map("scrapbook_id") @db.Uuid
+  pageOrder          Int           @map("page_order")
+  backgroundColor    String?       @map("background_color")
+  backgroundImageUrl String?       @map("background_image_url")
+  
+  scrapbook          Scrapbook     @relation(fields: [scrapbookId], references: [id], onDelete: Cascade)
+  elements           PageElement[]
+
+  @@unique([scrapbookId, pageOrder])
+  @@index([scrapbookId])
+  @@map("pages")
+}
+
+enum ElementType {
+  photo
+  sticker
+  text
+
+  @@map("element_type")
+}
+
+model PageElement {
+  id         String      @id @default(uuid()) @db.Uuid
+  pageId     String      @map("page_id") @db.Uuid
+  type       ElementType
+  xPos       Float       @map("x_pos")
+  yPos       Float       @map("y_pos")
+  rotation   Float       @default(0)
+  scale      Float       @default(1)
+  zIndex     Int         @map("z_index")
+  properties Json        // { font?, color?, textContent?, assetUrl? }
+  
+  page       Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@map("page_elements")
+}
+
+model Song {
+  id              String          @id @default(uuid()) @db.Uuid
+  title           String
+  artist          String
+  fileUrl         String          @map("file_url")
+  durationSeconds Int             @map("duration_seconds")
+  
+  scrapbooks      ScrapbookSong[]
+
+  @@map("songs")
+}
+
+model ScrapbookSong {
+  scrapbookId String    @map("scrapbook_id") @db.Uuid
+  songId      String    @map("song_id") @db.Uuid
+  
+  scrapbook   Scrapbook @relation(fields: [scrapbookId], references: [id], onDelete: Cascade)
+  song        Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@id([scrapbookId, songId])
+  @@map("scrapbook_songs")
+}
